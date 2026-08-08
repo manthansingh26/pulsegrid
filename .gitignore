@@ -1,3 +1,12 @@
+# Dependencies
 node_modules/
 apps/api/node_modules/
+
+# Build output
+dist/
 apps/api/dist/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
