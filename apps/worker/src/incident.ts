@@ -1,4 +1,5 @@
 import { pool } from './db';
+import { populateIncidentBlastRadius } from './blastRadius';
 
 type IncidentTriggerStatus = 'up' | 'degraded' | 'down';
 
@@ -51,6 +52,9 @@ export async function handleIncidentCreation(serviceId: number, status: Incident
       
       console.log(`[worker] Created new incident=${incidentId} for root_service=${serviceId}`);
     }
+
+    // 5. Populate incident blast radius (affected downstream services)
+    await populateIncidentBlastRadius(client, incidentId, serviceId);
 
     await client.query('COMMIT');
   } catch (err) {
