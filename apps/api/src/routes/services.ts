@@ -179,3 +179,99 @@ servicesRouter.delete('/:id', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// POST /services/:id/dependencies - Create a dependency
+servicesRouter.post('/:id/dependencies', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { depends_on_service_id } = req.body;
+
+    if (!depends_on_service_id) {
+      return res.status(400).json({ error: 'depends_on_service_id is required' });
+    }
+
+    if (id === String(depends_on_service_id)) {
+      return res.status(400).json({ error: 'A service cannot depend on itself' });
+    }
+
+    // Verify both services exist and are active
+    const sourceService = await pool.query('SELECT id FROM services WHERE id = $1 AND is_active = true', [id]);
+    if (sourceService.rows.length === 0) {
+      return res.status(404).json({ error: 'Source service not found or inactive' });
+    }
+
+    const targetService = await pool.query('SELECT id FROM services WHERE id = $1 AND is_active = true', [depends_on_service_id]);
+    if (targetService.rows.length === 0) {
+      return res.status(404).json({ error: 'Target dependency service not found or inactive' });
+    }
+
+    // Insert dependency
+    try {
+      await pool.query(
+        'INSERT INTO dependencies (service_id, depends_on_service_id, created_at) VALUES ($1, $2, NOW())',
+        [id, depends_on_service_id]
+      );
+      res.status(201).json({ message: 'Dependency created successfully' });
+    } catch (dbErr: any) {
+      if (dbErr.code === '23505') { // Unique violation
+        return res.status(409).json({ error: 'Dependency already exists' });
+      }
+      throw dbErr;
+    }
+  } catch (err) {
+    console.error('Error creating dependency:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /services/:id/dependencies - List dependencies
+servicesRouter.get('/:id/dependencies', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Outgoing dependencies (services this service depends on)
+    const outgoingResult = await pool.query(`
+      SELECT s.id, s.name, s.url, s.is_active, d.created_at as dependency_created_at
+      FROM dependencies d
+      JOIN services s ON d.depends_on_service_id = s.id
+      WHERE d.service_id = $1
+    `, [id]);
+
+    // Incoming dependencies (services that depend on this service)
+    const incomingResult = await pool.query(`
+      SELECT s.id, s.name, s.url, s.is_active, d.created_at as dependency_created_at
+      FROM dependencies d
+      JOIN services s ON d.service_id = s.id
+      WHERE d.depends_on_service_id = $1
+    `, [id]);
+
+    res.status(200).json({
+      outgoing: outgoingResult.rows,
+      incoming: incomingResult.rows
+    });
+  } catch (err) {
+    console.error('Error fetching dependencies:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /services/:id/dependencies/:dependencyId - Remove a dependency
+servicesRouter.delete('/:id/dependencies/:dependencyId', async (req, res) => {
+  try {
+    const { id, dependencyId } = req.params;
+
+    const result = await pool.query(
+      'DELETE FROM dependencies WHERE service_id = $1 AND depends_on_service_id = $2 RETURNING *',
+      [id, dependencyId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Dependency not found' });
+    }
+
+    res.status(204).send();
+  } catch (err) {
+    console.error('Error deleting dependency:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
