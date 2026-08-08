@@ -1,0 +1,18 @@
+zerops:
+  - setup: api
+    build:
+      base: nodejs@22
+      buildCommands:
+        - cd apps/api && npm ci
+        - cd apps/api && npm run build
+      deployFiles:
+        - apps/api/dist
+        - apps/api/package.json
+        - apps/api/package-lock.json
+        - apps/api/node_modules
+    run:
+      base: nodejs@22
+      ports:
+        - port: 3000
+          httpSupport: true
+      start: cd apps/api && npm start
