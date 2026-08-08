@@ -10,3 +10,5 @@ apps/api/dist/
 .env
 .env.*
 !.env.example
+apps/worker/node_modules/
+apps/worker/dist/
