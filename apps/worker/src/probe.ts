@@ -1,4 +1,6 @@
 import { pool } from './db';
+import { handleIncidentCreation } from './incident';
+
 
 const TIMEOUT_MS = 10000; // 10 seconds timeout
 
@@ -6,9 +8,9 @@ export type ProbeResult = 'up' | 'degraded' | 'down';
 
 export async function probeService(service: any) {
   const { id: service_id, url, region_label: region, name } = service;
-  
+
   console.log(`[worker] probing service=${name} (${url})`);
-  
+
   const startTime = performance.now();
   let status: ProbeResult = 'down';
   let latency_ms: number | null = null;
@@ -18,7 +20,7 @@ export async function probeService(service: any) {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
-    
+
     // Perform the HTTP GET request.
     // Setting redirect: 'manual' to intercept 3xx responses natively for accurate classification.
     const response = await fetch(url, {
@@ -28,11 +30,11 @@ export async function probeService(service: any) {
     });
 
     clearTimeout(timeoutId);
-    
+
     const endTime = performance.now();
     latency_ms = Math.round(endTime - startTime);
     http_status_code = response.status;
-    
+
     if (http_status_code >= 200 && http_status_code < 300) {
       if (latency_ms > 2000) {
         status = 'degraded';
@@ -47,7 +49,7 @@ export async function probeService(service: any) {
 
   } catch (err: any) {
     status = 'down';
-    
+
     if (err.name === 'AbortError') {
       error_message = `Timeout after ${TIMEOUT_MS}ms`;
     } else {
@@ -64,7 +66,11 @@ export async function probeService(service: any) {
        VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
       [service_id, status, latency_ms, http_status_code, error_message, region]
     );
+
+    if (status === 'down') {
+      await handleIncidentCreation(service_id, status);
+    }
   } catch (dbErr) {
-    console.error(`[worker] Database insert failed for service=${name}`, dbErr);
+    console.error(`[worker] Database or Incident operation failed for service=${name}`, dbErr);
   }
 }
