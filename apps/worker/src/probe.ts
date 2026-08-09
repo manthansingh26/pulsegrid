@@ -1,5 +1,6 @@
 import { pool } from './db';
 import { handleIncidentCreation } from './incident';
+import { resolveIncidentIfRecovered } from './incidentResolution';
 
 
 const TIMEOUT_MS = 10000; // 10 seconds timeout
@@ -69,6 +70,8 @@ export async function probeService(service: any) {
 
     if (status === 'down') {
       await handleIncidentCreation(service_id, status);
+    } else if (status === 'up') {
+      await resolveIncidentIfRecovered(service_id);
     }
   } catch (dbErr) {
     console.error(`[worker] Database or Incident operation failed for service=${name}`, dbErr);
