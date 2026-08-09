@@ -4,9 +4,13 @@ zerops:
       base: nodejs@22
       buildCommands:
         - mkdir -p node_modules/.bin apps/api/node_modules/.bin
-        - printf '#!/bin/sh\nDIR="$1"\nshift 2\ncd "$DIR" && exec "$@"\n' > node_modules/.bin/cd
+        - echo '#!/bin/sh' > node_modules/.bin/cd
+        - echo 'DIR="$1"' >> node_modules/.bin/cd
+        - echo 'shift 2' >> node_modules/.bin/cd
+        - echo 'cd "$DIR" && exec "$@"' >> node_modules/.bin/cd
         - chmod +x node_modules/.bin/cd
         - cp node_modules/.bin/cd apps/api/node_modules/.bin/cd
+        - chmod +x apps/api/node_modules/.bin/cd
         - cd apps/api && npm ci
         - cd apps/api && npm run build
       deployFiles:
@@ -32,9 +36,13 @@ zerops:
       base: nodejs@22
       buildCommands:
         - mkdir -p node_modules/.bin apps/worker/node_modules/.bin
-        - printf '#!/bin/sh\nDIR="$1"\nshift 2\ncd "$DIR" && exec "$@"\n' > node_modules/.bin/cd
+        - echo '#!/bin/sh' > node_modules/.bin/cd
+        - echo 'DIR="$1"' >> node_modules/.bin/cd
+        - echo 'shift 2' >> node_modules/.bin/cd
+        - echo 'cd "$DIR" && exec "$@"' >> node_modules/.bin/cd
         - chmod +x node_modules/.bin/cd
         - cp node_modules/.bin/cd apps/worker/node_modules/.bin/cd
+        - chmod +x apps/worker/node_modules/.bin/cd
         - cd apps/worker && npm ci
         - cd apps/worker && npm run build
       deployFiles:
@@ -53,9 +61,13 @@ zerops:
       base: nodejs@22
       buildCommands:
         - mkdir -p node_modules/.bin apps/frontend/node_modules/.bin
-        - printf '#!/bin/sh\nDIR="$1"\nshift 2\ncd "$DIR" && exec "$@"\n' > node_modules/.bin/cd
+        - echo '#!/bin/sh' > node_modules/.bin/cd
+        - echo 'DIR="$1"' >> node_modules/.bin/cd
+        - echo 'shift 2' >> node_modules/.bin/cd
+        - echo 'cd "$DIR" && exec "$@"' >> node_modules/.bin/cd
         - chmod +x node_modules/.bin/cd
         - cp node_modules/.bin/cd apps/frontend/node_modules/.bin/cd
+        - chmod +x apps/frontend/node_modules/.bin/cd
         - cd apps/frontend && npm ci
         - cd apps/frontend && npm run build
       deployFiles:
