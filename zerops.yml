@@ -3,19 +3,16 @@ zerops:
     build:
       base: nodejs@22
       buildCommands:
-        - mkdir -p node_modules/.bin apps/api/node_modules/.bin
-        - echo '#!/bin/sh' > node_modules/.bin/cd
-        - echo 'DIR="$1"' >> node_modules/.bin/cd
-        - echo 'shift 2' >> node_modules/.bin/cd
-        - echo 'cd "$DIR" && exec "$@"' >> node_modules/.bin/cd
-        - chmod +x node_modules/.bin/cd
-        - cp node_modules/.bin/cd apps/api/node_modules/.bin/cd
-        - chmod +x apps/api/node_modules/.bin/cd
+        - mkdir -p ../../home/zerops/.local/bin
+        - echo '#!/bin/sh' > ../../home/zerops/.local/bin/cd
+        - echo 'DIR="$1"' >> ../../home/zerops/.local/bin/cd
+        - echo 'shift 2' >> ../../home/zerops/.local/bin/cd
+        - echo 'cd "$DIR" && exec "$@"' >> ../../home/zerops/.local/bin/cd
+        - chmod +x ../../home/zerops/.local/bin/cd
         - cd apps/api && npm ci
         - cd apps/api && npm run build
       deployFiles:
-        - node_modules/.bin/cd
-        - apps/api/node_modules/.bin/cd
+        - ../../home/zerops/.local/bin/cd
         - apps/api/dist
         - apps/api/package.json
         - apps/api/package-lock.json
@@ -35,19 +32,16 @@ zerops:
     build:
       base: nodejs@22
       buildCommands:
-        - mkdir -p node_modules/.bin apps/worker/node_modules/.bin
-        - echo '#!/bin/sh' > node_modules/.bin/cd
-        - echo 'DIR="$1"' >> node_modules/.bin/cd
-        - echo 'shift 2' >> node_modules/.bin/cd
-        - echo 'cd "$DIR" && exec "$@"' >> node_modules/.bin/cd
-        - chmod +x node_modules/.bin/cd
-        - cp node_modules/.bin/cd apps/worker/node_modules/.bin/cd
-        - chmod +x apps/worker/node_modules/.bin/cd
+        - mkdir -p ../../home/zerops/.local/bin
+        - echo '#!/bin/sh' > ../../home/zerops/.local/bin/cd
+        - echo 'DIR="$1"' >> ../../home/zerops/.local/bin/cd
+        - echo 'shift 2' >> ../../home/zerops/.local/bin/cd
+        - echo 'cd "$DIR" && exec "$@"' >> ../../home/zerops/.local/bin/cd
+        - chmod +x ../../home/zerops/.local/bin/cd
         - cd apps/worker && npm ci
         - cd apps/worker && npm run build
       deployFiles:
-        - node_modules/.bin/cd
-        - apps/worker/node_modules/.bin/cd
+        - ../../home/zerops/.local/bin/cd
         - apps/worker/dist
         - apps/worker/package.json
         - apps/worker/package-lock.json
@@ -60,19 +54,16 @@ zerops:
     build:
       base: nodejs@22
       buildCommands:
-        - mkdir -p node_modules/.bin apps/frontend/node_modules/.bin
-        - echo '#!/bin/sh' > node_modules/.bin/cd
-        - echo 'DIR="$1"' >> node_modules/.bin/cd
-        - echo 'shift 2' >> node_modules/.bin/cd
-        - echo 'cd "$DIR" && exec "$@"' >> node_modules/.bin/cd
-        - chmod +x node_modules/.bin/cd
-        - cp node_modules/.bin/cd apps/frontend/node_modules/.bin/cd
-        - chmod +x apps/frontend/node_modules/.bin/cd
+        - mkdir -p ../../home/zerops/.local/bin
+        - echo '#!/bin/sh' > ../../home/zerops/.local/bin/cd
+        - echo 'DIR="$1"' >> ../../home/zerops/.local/bin/cd
+        - echo 'shift 2' >> ../../home/zerops/.local/bin/cd
+        - echo 'cd "$DIR" && exec "$@"' >> ../../home/zerops/.local/bin/cd
+        - chmod +x ../../home/zerops/.local/bin/cd
         - cd apps/frontend && npm ci
         - cd apps/frontend && npm run build
       deployFiles:
-        - node_modules/.bin/cd
-        - apps/frontend/node_modules/.bin/cd
+        - ../../home/zerops/.local/bin/cd
         - apps/frontend/dist
         - apps/frontend/package.json
         - apps/frontend/package-lock.json
