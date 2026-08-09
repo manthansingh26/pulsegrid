@@ -1,14 +1,16 @@
 # Dependencies
 node_modules/
 apps/api/node_modules/
+apps/worker/node_modules/
+apps/frontend/node_modules/
 
 # Build output
 dist/
 apps/api/dist/
+apps/worker/dist/
+apps/frontend/dist/
 
 # Environment secrets
 .env
 .env.*
 !.env.example
-apps/worker/node_modules/
-apps/worker/dist/

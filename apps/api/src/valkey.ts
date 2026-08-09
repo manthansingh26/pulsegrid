@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const valkeyUrl = process.env.VALKEY_URL || 'redis://localhost:6379';
+const valkeyUrl = process.env.VALKEY_URL || process.env.valkey_connectionString || 'redis://localhost:6379';
 
 export const valkey = new Redis(valkeyUrl, {
   retryStrategy(times) {

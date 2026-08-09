@@ -10,9 +10,45 @@ zerops:
         - apps/api/package.json
         - apps/api/package-lock.json
         - apps/api/node_modules
+        - package.json
     run:
       base: nodejs@22
       ports:
         - port: 3000
           httpSupport: true
-      start: cd apps/api && npm start
+      start: node apps/api/dist/index.js
+
+  - setup: worker
+    build:
+      base: nodejs@22
+      buildCommands:
+        - cd apps/worker && npm ci
+        - cd apps/worker && npm run build
+      deployFiles:
+        - apps/worker/dist
+        - apps/worker/package.json
+        - apps/worker/package-lock.json
+        - apps/worker/node_modules
+        - package.json
+    run:
+      base: nodejs@22
+      start: node apps/worker/dist/index.js
+
+  - setup: frontend
+    build:
+      base: nodejs@22
+      buildCommands:
+        - cd apps/frontend && npm ci
+        - cd apps/frontend && npm run build
+      deployFiles:
+        - apps/frontend/dist
+        - apps/frontend/package.json
+        - apps/frontend/package-lock.json
+        - apps/frontend/node_modules
+        - package.json
+    run:
+      base: nodejs@22
+      ports:
+        - port: 3000
+          httpSupport: true
+      start: npx vite preview --host 0.0.0.0 --port 3000
