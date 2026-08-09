@@ -296,3 +296,61 @@ servicesRouter.delete('/:id/dependencies/:dependencyId', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// GET /services/:id/checks - List recent checks
+servicesRouter.get('/:id/checks', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+
+    const { rows } = await pool.query(
+      'SELECT status, latency_ms, http_status_code, error_message, region, checked_at FROM checks WHERE service_id = $1 ORDER BY checked_at DESC LIMIT $2',
+      [id, limit]
+    );
+
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error('Error fetching checks:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /services/:id/stats - Uptime and latency statistics
+servicesRouter.get('/:id/stats', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // We calculate stats for 1h, 24h, 7d
+    const query = `
+      SELECT 
+        (SELECT COUNT(*) FROM checks WHERE service_id = $1 AND checked_at >= NOW() - INTERVAL '1 hour') as total_1h,
+        (SELECT COUNT(*) FROM checks WHERE service_id = $1 AND status = 'up' AND checked_at >= NOW() - INTERVAL '1 hour') as up_1h,
+        (SELECT AVG(latency_ms) FROM checks WHERE service_id = $1 AND checked_at >= NOW() - INTERVAL '1 hour') as latency_1h,
+        
+        (SELECT COUNT(*) FROM checks WHERE service_id = $1 AND checked_at >= NOW() - INTERVAL '24 hours') as total_24h,
+        (SELECT COUNT(*) FROM checks WHERE service_id = $1 AND status = 'up' AND checked_at >= NOW() - INTERVAL '24 hours') as up_24h,
+        (SELECT AVG(latency_ms) FROM checks WHERE service_id = $1 AND checked_at >= NOW() - INTERVAL '24 hours') as latency_24h,
+        
+        (SELECT COUNT(*) FROM checks WHERE service_id = $1 AND checked_at >= NOW() - INTERVAL '7 days') as total_7d,
+        (SELECT COUNT(*) FROM checks WHERE service_id = $1 AND status = 'up' AND checked_at >= NOW() - INTERVAL '7 days') as up_7d,
+        (SELECT AVG(latency_ms) FROM checks WHERE service_id = $1 AND checked_at >= NOW() - INTERVAL '7 days') as latency_7d
+    `;
+    
+    const { rows } = await pool.query(query, [id]);
+    const r = rows[0];
+
+    const formatStat = (total: number, up: number, latency: string | null) => ({
+      uptime_percentage: total > 0 ? Number(((up / total) * 100).toFixed(2)) : null,
+      avg_latency_ms: latency ? Math.round(Number(latency)) : null
+    });
+
+    res.status(200).json({
+      '1h': formatStat(Number(r.total_1h), Number(r.up_1h), r.latency_1h),
+      '24h': formatStat(Number(r.total_24h), Number(r.up_24h), r.latency_24h),
+      '7d': formatStat(Number(r.total_7d), Number(r.up_7d), r.latency_7d),
+    });
+  } catch (err) {
+    console.error('Error calculating stats:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
