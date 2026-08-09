@@ -1,6 +1,7 @@
 import { pool } from './db';
 import { handleIncidentCreation } from './incident';
 import { resolveIncidentIfRecovered } from './incidentResolution';
+import { valkey } from './valkey';
 
 
 const TIMEOUT_MS = 10000; // 10 seconds timeout
@@ -72,6 +73,18 @@ export async function probeService(service: any) {
       await handleIncidentCreation(service_id, status);
     } else if (status === 'up') {
       await resolveIncidentIfRecovered(service_id);
+    }
+
+    try {
+      const payload = JSON.stringify({
+        service_id,
+        status,
+        latency_ms,
+        updated_at: new Date().toISOString()
+      });
+      await valkey.set(`pulsegrid:service:${service_id}:status`, payload);
+    } catch (valkeyErr: any) {
+      console.error(`[worker] Valkey update failed for service=${name}:`, valkeyErr.message);
     }
   } catch (dbErr) {
     console.error(`[worker] Database or Incident operation failed for service=${name}`, dbErr);

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { pool } from '../db/index';
+import { valkey } from '../valkey';
 
 export const servicesRouter = Router();
 
@@ -57,6 +58,26 @@ servicesRouter.post('/', async (req, res) => {
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error('Error creating service:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /services/status - Return current status from Valkey for all services
+servicesRouter.get('/status', async (req, res) => {
+  try {
+    const keys = await valkey.keys('pulsegrid:service:*:status');
+    if (keys.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    const values = await valkey.mget(keys);
+    const statuses = values
+      .filter((val) => val !== null)
+      .map((val) => JSON.parse(val as string));
+
+    res.status(200).json(statuses);
+  } catch (err) {
+    console.error('Error fetching current statuses from Valkey:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
