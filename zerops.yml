@@ -10,13 +10,16 @@ zerops:
         - apps/api/package.json
         - apps/api/package-lock.json
         - apps/api/node_modules
-        - package.json
     run:
       base: nodejs@22
       ports:
         - port: 3000
           httpSupport: true
       start: node apps/api/dist/index.js
+      healthCheck:
+        httpGet:
+          port: 3000
+          path: /health
 
   - setup: worker
     build:
@@ -29,7 +32,6 @@ zerops:
         - apps/worker/package.json
         - apps/worker/package-lock.json
         - apps/worker/node_modules
-        - package.json
     run:
       base: nodejs@22
       start: node apps/worker/dist/index.js
@@ -45,10 +47,9 @@ zerops:
         - apps/frontend/package.json
         - apps/frontend/package-lock.json
         - apps/frontend/node_modules
-        - package.json
     run:
       base: nodejs@22
       ports:
         - port: 3000
           httpSupport: true
-      start: npx vite preview --host 0.0.0.0 --port 3000
+      start: npx serve -s apps/frontend/dist -l 3000
